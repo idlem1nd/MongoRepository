@@ -1,7 +1,6 @@
 ﻿namespace MongoRepository
 {
     using MongoDB.Driver;
-    using MongoDB.Driver.Builders;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -16,7 +15,7 @@
 
     /// <summary>
     /// Deals with the collections of entities in MongoDb. This class tries to hide as much MongoDb-specific details
-    /// as possible but it's not 100% *yet*. It is a very thin wrapper around most methods on MongoDb's MongoCollection
+    /// as possible but it's not 100% *yet*. It is a very thin wrapper around most methods on MongoDb's IMongoCollection
     /// objects.
     /// </summary>
     /// <typeparam name="T">The type contained in the repository to manage.</typeparam>
@@ -25,9 +24,9 @@
         where T : IEntity<TKey>
     {
         /// <summary>
-        /// MongoCollection field.
+        /// IMongoCollection field.
         /// </summary>
-        private MongoCollection<T> collection;
+        private IMongoCollection<T> collection;
 
         /// <summary>
         /// Initializes a new instance of the MongoRepositoryManager class.
@@ -280,7 +279,7 @@
 
     /// <summary>
     /// Deals with the collections of entities in MongoDb. This class tries to hide as much MongoDb-specific details
-    /// as possible but it's not 100% *yet*. It is a very thin wrapper around most methods on MongoDb's MongoCollection
+    /// as possible but it's not 100% *yet*. It is a very thin wrapper around most methods on MongoDb's IMongoCollection
     /// objects.
     /// </summary>
     /// <typeparam name="T">The type contained in the repository to manage.</typeparam>

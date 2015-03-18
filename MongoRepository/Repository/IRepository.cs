@@ -24,7 +24,7 @@
         /// for most purposes you can use the MongoRepositoryManager&lt;T&gt;
         /// </remarks>
         /// <value>The Mongo collection (to perform advanced operations).</value>
-        MongoCollection<T> Collection { get; }
+        IMongoCollection<T> Collection { get; }
 
         /// <summary>
         /// Returns the T by its given id.
