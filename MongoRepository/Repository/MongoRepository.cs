@@ -85,26 +85,18 @@
         }
 
         /// <summary>
-        /// Gets the name of the collection
-        /// </summary>
-        public string CollectionName
-        {
-            get { return this.collection.Name; }
-        }
-
-        /// <summary>
         /// Returns the T by its given id.
         /// </summary>
         /// <param name="id">The Id of the entity to retrieve.</param>
         /// <returns>The Entity T.</returns>
-        public virtual T GetById(TKey id)
+        public virtual async Task<T> GetById(TKey id)
         {
             if (typeof(T).IsSubclassOf(typeof(Entity)))
             {
-                return this.GetById(new ObjectId(id as string));
+                return await this.GetById(new ObjectId(id as string));
             }
 
-            return this.collection.FindOneByIdAs<T>(BsonValue.Create(id));
+            throw new NotSupportedException("T is not a subclass of Entity");
         }
 
         /// <summary>
@@ -112,9 +104,11 @@
         /// </summary>
         /// <param name="id">The Id of the entity to retrieve.</param>
         /// <returns>The Entity T.</returns>
-        public virtual T GetById(ObjectId id)
+        public virtual async Task<T> GetById(ObjectId id)
         {
-            return this.collection.FindOneByIdAs<T>(id);
+            var result = await this.collection.FindAsync<T>(t => t.Id.Equals(id));
+
+            return result.Current.First();
         }
 
         /// <summary>
@@ -122,9 +116,9 @@
         /// </summary>
         /// <param name="entity">The entity T.</param>
         /// <returns>The added entity including its new ObjectId.</returns>
-        public virtual T Add(T entity)
+        public virtual async Task<T> AddAsync(T entity)
         {
-            this.collection.Insert<T>(entity);
+            await this.collection.InsertOneAsync(entity);
 
             return entity;
         }
@@ -133,9 +127,9 @@
         /// Adds the new entities in the repository.
         /// </summary>
         /// <param name="entities">The entities of type T.</param>
-        public virtual void Add(IEnumerable<T> entities)
+        public virtual async void Add(IEnumerable<T> entities)
         {
-            this.collection.InsertBatch<T>(entities);
+            await this.collection.InsertManyAsync(entities);
         }
 
         /// <summary>
@@ -143,10 +137,9 @@
         /// </summary>
         /// <param name="entity">The entity.</param>
         /// <returns>The updated entity.</returns>
-        public virtual T Update(T entity)
+        public virtual async Task<T> Update(T entity)
         {
-            this.collection.Save<T>(entity);
-
+            await this.collection.ReplaceOneAsync<T>((T) => T.Id.Equals(entity.Id), entity);
             return entity;
         }
 
@@ -154,11 +147,11 @@
         /// Upserts the entities.
         /// </summary>
         /// <param name="entities">The entities to update.</param>
-        public virtual void Update(IEnumerable<T> entities)
+        public virtual async void Update(IEnumerable<T> entities)
         {
             foreach (T entity in entities)
             {
-                this.collection.Save<T>(entity);
+                await this.collection.ReplaceOneAsync<T>((T) => T.Id.Equals(entity.Id), entity);
             }
         }
 
@@ -168,15 +161,20 @@
         /// <param name="id">The entity's id.</param>
         public virtual async void DeleteAsync(TKey id)
         {
+            await this.DoDeleteAsync(id);
+        }
+
+        private virtual async Task<DeleteResult> DoDeleteAsync(TKey id)
+        {
             if (typeof(T).IsSubclassOf(typeof(Entity)))
             {
                 var objId = new ObjectId(id as string);
-                await this.collection.DeleteOneAsync((T) => T.Id.Equals(objId));
+                return await this.collection.DeleteOneAsync((T) => T.Id.Equals(objId));
             }
             else
             {
                 var objId = BsonValue.Create(id);
-                await this.collection.DeleteOneAsync((T) => T.Id.Equals(objId));
+                return await this.collection.DeleteOneAsync((T) => T.Id.Equals(objId));
             }
         }
 
@@ -195,7 +193,7 @@
         /// <param name="entity">The entity to delete.</param>
         public virtual async void DeleteAsync(T entity)
         {
-            await this.DeleteAsync(entity.Id);
+            await this.DoDeleteAsync(entity.Id);
         }
 
         /// <summary>
