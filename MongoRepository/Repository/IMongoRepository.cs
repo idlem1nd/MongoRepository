@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 
 namespace MongoRepository
 {
-    interface IMongoRepository<T, TKey>
-     where T : IEntity<TKey>
+    public interface IMongoRepository<T, TKey>
+       where T : IEntity<TKey>
     {
         void AddAsync(global::System.Collections.Generic.IEnumerable<T> entities);
         Task<T> AddAsync(T entity);
@@ -21,4 +21,7 @@ namespace MongoRepository
         void Update(global::System.Collections.Generic.IEnumerable<T> entities);
         Task<T> Update(T entity);
     }
+
+    public interface IMongoRepository<T> : IMongoRepository<T, string>
+        where T : IEntity<string> { }
 }
