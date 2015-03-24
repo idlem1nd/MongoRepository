@@ -14,7 +14,7 @@
     /// </summary>
     /// <typeparam name="T">The type contained in the repository.</typeparam>
     /// <typeparam name="TKey">The type used for the entity's Id.</typeparam>
-    public class MongoRepository<T, TKey> : IRepository<T, TKey>
+    public class MongoRepository<T, TKey> : IMongoRepository<T,TKey>
         where T : IEntity<TKey>
     {
         /// <summary>
@@ -91,12 +91,8 @@
         /// <returns>The Entity T.</returns>
         public virtual async Task<T> GetById(TKey id)
         {
-            if (typeof(T).IsSubclassOf(typeof(Entity)))
-            {
-                return await this.GetById(new ObjectId(id as string));
-            }
-
-            throw new NotSupportedException("T is not a subclass of Entity");
+            // TODO: I think this will always work, but the original did something weirder...
+            return await this.GetById(new ObjectId(id as string));
         }
 
         /// <summary>
@@ -107,7 +103,6 @@
         public virtual async Task<T> GetById(ObjectId id)
         {
             var result = await this.collection.FindAsync<T>(t => t.Id.Equals(id));
-
             return result.Current.First();
         }
 
@@ -119,7 +114,6 @@
         public virtual async Task<T> AddAsync(T entity)
         {
             await this.collection.InsertOneAsync(entity);
-
             return entity;
         }
 
@@ -127,7 +121,7 @@
         /// Adds the new entities in the repository.
         /// </summary>
         /// <param name="entities">The entities of type T.</param>
-        public virtual async void Add(IEnumerable<T> entities)
+        public virtual async void AddAsync(IEnumerable<T> entities)
         {
             await this.collection.InsertManyAsync(entities);
         }
@@ -139,7 +133,8 @@
         /// <returns>The updated entity.</returns>
         public virtual async Task<T> Update(T entity)
         {
-            await this.collection.ReplaceOneAsync<T>((T) => T.Id.Equals(entity.Id), entity);
+            var options = new UpdateOptions { IsUpsert = true };
+            await this.collection.ReplaceOneAsync<T>((T) => T.Id.Equals(entity.Id), entity, options);
             return entity;
         }
 
@@ -149,10 +144,11 @@
         /// <param name="entities">The entities to update.</param>
         public virtual async void Update(IEnumerable<T> entities)
         {
-            foreach (T entity in entities)
-            {
-                await this.collection.ReplaceOneAsync<T>((T) => T.Id.Equals(entity.Id), entity);
-            }
+            // TODO: There may be a better way to batch upsert - we'll find out when the 
+            // 2.0 docs are more up to date. For now this has the same behaviour and performance
+            // as the previous version which looped over calling Save() synchronously.
+            // There should be some benefit to yeilding the thread for the async operations.
+            await Task.WhenAll(entities.Select(t => Update(t)));
         }
 
         /// <summary>
@@ -164,7 +160,7 @@
             await this.DoDeleteAsync(id);
         }
 
-        private virtual async Task<DeleteResult> DoDeleteAsync(TKey id)
+        protected virtual async Task<DeleteResult> DoDeleteAsync(TKey id)
         {
             if (typeof(T).IsSubclassOf(typeof(Entity)))
             {
@@ -228,7 +224,7 @@
     /// </summary>
     /// <typeparam name="T">The type contained in the repository.</typeparam>
     /// <remarks>Entities are assumed to use strings for Id's.</remarks>
-    public class MongoRepository<T> : MongoRepository<T, string>, IRepository<T>
+    public class MongoRepository<T> : MongoRepository<T, string>
         where T : IEntity<string>
     {
         /// <summary>
