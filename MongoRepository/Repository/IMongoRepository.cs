@@ -1,5 +1,8 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace MongoRepository
@@ -7,19 +10,24 @@ namespace MongoRepository
     public interface IMongoRepository<T, TKey>
        where T : IEntity<TKey>
     {
-        void AddAsync(global::System.Collections.Generic.IEnumerable<T> entities);
+        Task AddAsync(IEnumerable<T> entities);
         Task<T> AddAsync(T entity);
         IMongoCollection<T> Collection { get; }
         Task<long> CountAsync();
-        void DeleteAllAsync();
-        void DeleteAsync(global::MongoDB.Bson.ObjectId id);
-        void DeleteAsync(global::System.Linq.Expressions.Expression<Func<T, bool>> predicate);
-        void DeleteAsync(T entity);
-        void DeleteAsync(TKey id);
-        Task<T> GetById(global::MongoDB.Bson.ObjectId id);
+        Task DeleteAllAsync();
+        Task DeleteAsync(ObjectId id);
+        Task DeleteAsync(Expression<Func<T, bool>> predicate);
+        Task DeleteAsync(T entity);
+        Task DeleteAsync(TKey id);
+        Task<T> GetById(ObjectId id);
         Task<T> GetById(TKey id);
-        void Update(global::System.Collections.Generic.IEnumerable<T> entities);
-        Task<T> Update(T entity);
+        Task<IAsyncCursor<T>> FindAsync(Expression<Func<T, bool>> filter);
+        Task UpdateAsync(IEnumerable<T> entities);
+        Task<T> UpdateAsync(T entity);
+        Task<List<T>> ToListAsync();
+
+        [Obsolete("Use the new fluent API on IMongoCollection instead")]
+        IEnumerable<BsonDocument> Aggregate(AggregateArgs args);    
     }
 
     public interface IMongoRepository<T> : IMongoRepository<T, string>
