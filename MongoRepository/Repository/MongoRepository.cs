@@ -198,16 +198,7 @@
 
         protected virtual async Task<DeleteResult> DoDeleteAsync(TKey id)
         {
-            if (typeof(T).IsSubclassOf(typeof(Entity)))
-            {
-                var objId = new ObjectId(id as string);
-                return await this.collection.DeleteOneAsync((T) => T.Id.Equals(objId));
-            }
-            else
-            {
-                var objId = BsonValue.Create(id);
-                return await this.collection.DeleteOneAsync((T) => T.Id.Equals(objId));
-            }
+            return await this.collection.DeleteOneAsync((T) => T.Id.Equals(id));
         }
 
         /// <summary>
