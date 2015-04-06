@@ -109,7 +109,7 @@
         /// </summary>
         /// <param name="id">The Id of the entity to retrieve.</param>
         /// <returns>The Entity T.</returns>
-        public virtual async Task<T> GetById(TKey id)
+        public virtual async Task<T> GetByIdAsync(TKey id)
         {
             // TODO: I think this will always work, but the original did something weirder...
             var result = await this.collection.Find<T>(t => t.Id.Equals(id)).ToListAsync();
@@ -121,7 +121,7 @@
         /// </summary>
         /// <param name="id">The Id of the entity to retrieve.</param>
         /// <returns>The Entity T.</returns>
-        public virtual async Task<T> GetById(ObjectId id)
+        public virtual async Task<T> GetByIdAsync(ObjectId id)
         {
             var key = id.ToString();
             var result = await this.collection.Find<T>(t => t.Id.Equals(key)).ToListAsync();

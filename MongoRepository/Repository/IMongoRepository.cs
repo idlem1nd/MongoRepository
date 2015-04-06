@@ -19,8 +19,8 @@ namespace MongoRepository
         Task DeleteAsync(Expression<Func<T, bool>> predicate);
         Task DeleteAsync(T entity);
         Task DeleteAsync(TKey id);
-        Task<T> GetById(ObjectId id);
-        Task<T> GetById(TKey id);
+        Task<T> GetByIdAsync(ObjectId id);
+        Task<T> GetByIdAsync(TKey id);
         Task<IAsyncCursor<T>> FindAsync(Expression<Func<T, bool>> filter);
         Task UpdateAsync(IEnumerable<T> entities);
         Task<T> UpdateAsync(T entity);
